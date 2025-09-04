@@ -1,0 +1,19 @@
+{
+  "name": "pitang-booster-2025.1",
+  "version": "1.0.0",
+  "description": "repositório para metas estabelecidas no pitang booster",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheus-soares23/PitangBooster-2025.1.git"
+  },
+  "author": "Matheus Soares",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matheus-soares23/PitangBooster-2025.1/issues"
+  },
+  "homepage": "https://github.com/matheus-soares23/PitangBooster-2025.1#readme"
+}
