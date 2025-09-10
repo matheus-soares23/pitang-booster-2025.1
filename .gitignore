@@ -1,0 +1,9 @@
+node_modules/
+npm-debug.log
+/dist
+/build
+*.js.map
+.env
+.env.*
+.DS_Store
+Thumbs.db

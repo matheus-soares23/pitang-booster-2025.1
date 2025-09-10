@@ -4,7 +4,15 @@
   "description": "repositório para metas estabelecidas no pitang booster",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -15,5 +23,14 @@
   "bugs": {
     "url": "https://github.com/matheus-soares23/PitangBooster-2025.1/issues"
   },
-  "homepage": "https://github.com/matheus-soares23/PitangBooster-2025.1#readme"
+  "homepage": "https://github.com/matheus-soares23/PitangBooster-2025.1#readme",
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@types/express": "^5.0.3"
+  }
 }
