@@ -1,6 +1,6 @@
 import { entryPairDto } from "./dto/entrypair.dto";
 export class returnSystemService {
-  async result(numberInterval: entryPairDto) {
+  async getResult(numberInterval: entryPairDto) {
     const { numbers, operation } = numberInterval;
     const pairNumbers = this.getPairNumbers(numbers);
     const oddNumbers = this.getOddNumbers(numbers);
@@ -21,11 +21,11 @@ export class returnSystemService {
     }
   }
 
-  getPairNumbers = (numbers: number[]): number[] => {
+  private getPairNumbers = (numbers: number[]): number[] => {
     return numbers.filter((num) => num % 2 === 0);
   };
 
-  getOddNumbers = (numbers: number[]): number[] => {
+  private getOddNumbers = (numbers: number[]): number[] => {
     return numbers.filter((num) => num % 2 !== 0);
   };
 
@@ -33,7 +33,7 @@ export class returnSystemService {
     return numbers.reduce((acc, num) => acc + num, 0);
   };
 
-  getAverage = (numbers: number[]): number => {
+  private getAverage = (numbers: number[]): number => {
     const sum = this.getSum(numbers);
     return sum / numbers.length;
   };

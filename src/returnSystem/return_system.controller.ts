@@ -8,6 +8,6 @@ export class returnSystemController {
 
   @Post()
   getResult(@Body() numberInterval: entryPairDto) {
-    return this.returnSystemService.result(numberInterval);
+    return this.returnSystemService.getResult(numberInterval);
   }
 }
