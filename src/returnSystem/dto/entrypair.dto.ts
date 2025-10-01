@@ -1,4 +1,5 @@
 export class entryPairDto {
-    numbers : number[];
+    start: number;
+    end: number;
     operation: string;
 }

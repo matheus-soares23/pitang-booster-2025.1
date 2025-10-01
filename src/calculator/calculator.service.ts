@@ -1,8 +1,13 @@
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
 export class calculatorService {
   async getResult(expression: string): Promise<number> {
+    this.validateGeneralExpressionInput(expression);
+    
     const expressionParts = expression.trim().split(/\s+/);
 
-    this.validateInput(expressionParts);
+    this.validateInputParts(expressionParts);
 
     const numbers: number[] = [];
     const operations: string[] = [];
@@ -47,33 +52,110 @@ export class calculatorService {
     b: number,
     operation: string
   ): number {
+    if (!isFinite(a) || !isFinite(b)) {
+      throw new Error('Não é possível calcular com números infinitos ou inválidos');
+    }
+
     switch (operation) {
       case "+":
-        return a + b;
+        const sum = a + b;
+        if (!isFinite(sum)) {
+          throw new Error('Resultado da soma excede os limites numéricos');
+        }
+        return sum;
       case "-":
-        return a - b;
+        const diff = a - b;
+        if (!isFinite(diff)) {
+          throw new Error('Resultado da subtração excede os limites numéricos');
+        }
+        return diff;
       case "*":
-        return a * b;
+        const mult = a * b;
+        if (!isFinite(mult)) {
+          throw new Error('Resultado da multiplicação excede os limites numéricos');
+        }
+        return mult;
       case "/":
-        return a / b;
+        if (b === 0) {
+          throw new Error('Divisão por zero não é permitida');
+        }
+        const div = a / b;
+        if (!isFinite(div)) {
+          throw new Error('Resultado da divisão excede os limites numéricos');
+        }
+        return div;
       default:
-        throw new Error(`${operation} nao é um operador válido`);
+        throw new Error(`'${operation}' não é um operador válido`);
     }
   }
 
-  private validateInput(expressionParts: string[]): void {
+  private validateGeneralExpressionInput(expression: string): void {
+    if (!expression || typeof expression !== 'string') {
+      throw new Error('Expressão não pode estar vazia ou nula');
+    }
+
+    const validPattern = /^[0-9+\-*/.\s]+$/;
+    if (!validPattern.test(expression)) {
+      throw new Error('Expressão contém caracteres inválidos.');
+    }
+
+    const consecutiveOperators = /[+\-*/]{2,}/;
+    if (consecutiveOperators.test(expression)) {
+      throw new Error('Operadores consecutivos não são permitidos');
+    }
+
+    const startsWithOperator = /^[+*/]/;
+    const endsWithOperator = /[+\-*/]$/;
+    if (startsWithOperator.test(expression.trim()) || endsWithOperator.test(expression.trim())) {
+      throw new Error('Expressão não pode iniciar ou terminar com operador');
+    }
+  }
+
+  private validateInputParts(expressionParts: string[]): void {
     if (expressionParts.length < 3 || expressionParts.length % 2 === 0) {
       throw new Error(
         "Formato de entrada inválido. Formato esperado: número operador número..."
       );
     }
+
+    // Validar se números estão em posições pares e operadores em posições ímpares
+    for (let i = 0; i < expressionParts.length; i++) {
+      if (i % 2 === 0) {
+        this.validateNumberPosition(expressionParts[i], i);
+      } else {
+        this.validateOperatorPosition(expressionParts[i], i);
+      }
+    }
+  }
+
+  private validateNumberPosition(value: string, position: number): void {
+    const numberPattern = /^-?\d+(\.\d+)?$/;
+    if (!numberPattern.test(value)) {
+      throw new Error(`Posição ${position + 1}: '${value}' não é um número válido`);
+    }
+  }
+
+  private validateOperatorPosition(value: string, position: number): void {
+    if (!['+', '-', '*', '/'].includes(value)) {
+      throw new Error(`Posição ${position + 1}: '${value}' não é um operador válido`);
+    }
   }
 
   private parseNumber(value: string): number {
+    const numberPattern = /^-?\d+(\.\d+)?$/;
+    if (!numberPattern.test(value)) {
+      throw new Error(`'${value}' não é um formato de número válido`);
+    }
+
     const num = parseFloat(value);
     if (isNaN(num)) {
-      throw new Error(`${value} Não é um número válido`);
+      throw new Error(`'${value}' não pode ser convertido para número`);
     }
+
+    if (!isFinite(num)) {
+      throw new Error(`'${value}' resultou em um número infinito`);
+    }
+
     return num;
   }
 
