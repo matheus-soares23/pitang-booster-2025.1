@@ -1,6 +1,6 @@
 import { returnSystemService } from "./return_system.service";
 import { entryPairDto } from "./dto/entrypair.dto";
-import { Body, Controller, Post, Get, Param } from "@nestjs/common";
+import { Body, Controller, Post, Get, Param, Query, Delete } from "@nestjs/common";
 
 @Controller("return-system")
 export class returnSystemController {
@@ -16,13 +16,14 @@ export class returnSystemController {
     return this.returnSystemService.getJobStatus(jobId);
   }
 
-  @Get("result/:jobId")
-  async getJobResult(@Param("jobId") jobId: string) {
-    return this.returnSystemService.getJobResult(jobId);
+  @Get("streaming/:jobId")
+  async getStreamingResult(@Param("jobId") jobId: string) {
+    return this.returnSystemService.getStreamingResult(jobId);
   }
 
-  @Post("result/basic-entry")
-  getResult(@Body() numberInterval: entryPairDto) {
-    return this.returnSystemService.getResult(numberInterval);
+  @Delete("streaming/:jobId")
+  async clearJobResult(@Param("jobId") jobId: string) {
+    await this.returnSystemService.clearJobResult(jobId);
+    return { message: `Resultado do job ${jobId} foi limpo da memória.` };
   }
 }

@@ -1,61 +1,77 @@
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
-import { CalculationJobData, CalculationResult } from './interfaces/return_system.interfaces';
+import { CalculationJobData, CalculationResult, ChunkResult, StreamingResult } from './interfaces/return_system.interfaces';
+import { ReturnSystemUtils } from './return_system.utils';
 
 @Processor('return-system-queue')
 export class returnSystemProcessor {
+  private readonly MAX_MEMORY_SAFE_SIZE = 1000000;
+  private jobResults = new Map<string, StreamingResult>();
+  
+  constructor(private readonly returnSystemUtils: ReturnSystemUtils) {}
   
   @Process('calculate-interval')
   async handleCalculation(job: Job<CalculationJobData>): Promise<CalculationResult> {
-    const { start, end, operation, jobId } = job.data;
+    const { start, end, operation, jobId, chunkSize = 100000 } = job.data;
     
     try {
-      await job.progress(10);
+      await job.progress(5);
       
       const intervalSize = end - start + 1;
+      const totalChunks = Math.ceil(intervalSize / chunkSize);
       
-      console.log(`Processando intervalo de ${intervalSize} números (${start} a ${end})`);
+      console.log(`Processando intervalo de ${intervalSize} números em ${totalChunks} chunks`);
       
-      await job.progress(20);
+      // Inicializar resultado streaming
+      const streamingResult: StreamingResult = {
+        jobId,
+        totalElements: intervalSize,
+        totalChunks,
+        chunkSize,
+        status: 'processing',
+        chunks: [],
+        completedChunks: 0,
+        currentProgress: 0
+      };
       
-      const numbers = this.generateNumbers(start, end);
+      this.jobResults.set(jobId, streamingResult);
+      await job.progress(10);
       
-      await job.progress(50);
-      
-      let result: any;
-      
-      switch (operation) {
-        case "sum":
-          result = this.calculateSum(start, end);
-          break;
-        case "average":
-          result = this.calculateAverage(start, end);
-          break;
-        case "pair-numbers":
-          result = this.getPairNumbers(start, end);
-          break;
-        case "odd-numbers":
-          result = this.getOddNumbers(start, end);
-          break;
-        default:
-          result = {
-            sum: this.calculateSum(start, end),
-            average: this.calculateAverage(start, end),
-            pairNumbers: this.getPairNumbers(start, end),
-            oddNumbers: this.getOddNumbers(start, end)
-          };
+      // Para intervalos pequenos
+      if (intervalSize <= this.MAX_MEMORY_SAFE_SIZE) {
+        const result = this.returnSystemUtils.processOperation(start, end, operation);
+        streamingResult.status = 'completed';
+        streamingResult.completedChunks = 1;
+        streamingResult.currentProgress = 100;
+        
+        return {
+          jobId,
+          result,
+          status: 'completed',
+          processedAt: new Date(),
+          totalChunks: 1,
+          completedChunks: 1
+        };
       }
       
+      // Para intervalos grandes - processar em chunks
+      await this.processLargeIntervalInChunks(start, end, operation, chunkSize, job, streamingResult);
+      
+      streamingResult.status = 'completed';
       await job.progress(100);
       
       return {
         jobId,
-        result,
+        result: `Processamento completo em ${totalChunks} chunks`,
         status: 'completed',
-        processedAt: new Date()
+        processedAt: new Date(),
+        totalChunks,
+        completedChunks: totalChunks
       };
       
     } catch (error) {
+      this.jobResults.delete(jobId);
+      
       return {
         jobId,
         result: null,
@@ -66,77 +82,64 @@ export class returnSystemProcessor {
     }
   }
   
-  private calculateSum(start: number, end: number): number {
-    const n = end - start + 1;
-    return (n * (start + end)) / 2;
-  }
-  
-  private calculateAverage(start: number, end: number): number {
-    return (start + end) / 2;
-  }
-  
-  private getPairNumbers(start: number, end: number): number[] | { count: number, first: number, last: number } {
-    const intervalSize = end - start + 1;
+  private async processLargeIntervalInChunks(
+    start: number, 
+    end: number, 
+    operation: string, 
+    chunkSize: number, 
+    job: Job<CalculationJobData>,
+    streamingResult: StreamingResult
+  ): Promise<void> {
+    const totalElements = end - start + 1;
+    const totalChunks = Math.ceil(totalElements / chunkSize);
     
-    // Para intervalos muito grandes, retorno resumido
-    if (intervalSize > 1000000) {
-      const startEven = start % 2 === 0 ? start : start + 1;
-      const endEven = end % 2 === 0 ? end : end - 1;
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+      const chunkStart = start + (chunkIndex * chunkSize);
+      const chunkEnd = Math.min(chunkStart + chunkSize - 1, end);
       
-      if (startEven > endEven) {
-        return { count: 0, first: null, last: null };
+      const chunkData = this.returnSystemUtils.processChunk(chunkStart, chunkEnd, operation);
+      
+      const chunkResult: ChunkResult = {
+        chunkIndex,
+        start: chunkStart,
+        end: chunkEnd,
+        data: chunkData,
+        timestamp: new Date()
+      };
+      
+      streamingResult.chunks.push(chunkResult);
+      streamingResult.completedChunks = chunkIndex + 1;
+      streamingResult.currentProgress = Math.round((streamingResult.completedChunks / totalChunks) * 100);
+      
+      const progress = 10 + Math.round((chunkIndex + 1) / totalChunks * 85);
+      await job.progress(progress);
+      
+      console.log(`Chunk ${chunkIndex + 1}/${totalChunks} processado: ${chunkStart} - ${chunkEnd}`);
+      
+      // Pequena pausa para não sobrecarregar o sistema
+      if (chunkIndex % 10 === 0) {
+        await this.sleep(10);
       }
-      
-      const count = Math.floor((endEven - startEven) / 2) + 1;
-      return { count, first: startEven, last: endEven };
     }
-    
-    // Para intervalos menores, retorno completo do array
-    const pairs: number[] = [];
-    const startEven = start % 2 === 0 ? start : start + 1;
-    
-    for (let i = startEven; i <= end; i += 2) {
-      pairs.push(i);
-    }
-    return pairs;
   }
   
-  private getOddNumbers(start: number, end: number): number[] | { count: number, first: number, last: number } {
-    const intervalSize = end - start + 1;
-    
-    // Para intervalos muito grandes, retorno resumido
-    if (intervalSize > 1000000) {
-      const startOdd = start % 2 !== 0 ? start : start + 1;
-      const endOdd = end % 2 !== 0 ? end : end - 1;
-      
-      if (startOdd > endOdd) {
-        return { count: 0, first: null, last: null };
-      }
-      
-      const count = Math.floor((endOdd - startOdd) / 2) + 1;
-      return { count, first: startOdd, last: endOdd };
+  getStreamingResult(jobId: string): StreamingResult | null {
+    return this.jobResults.get(jobId) || null;
+  }
+
+  getChunk(jobId: string, chunkIndex: number): ChunkResult | null {
+    const result = this.jobResults.get(jobId);
+    if (!result || !result.chunks[chunkIndex]) {
+      return null;
     }
-    
-    // Para intervalos menores, retorno completo do array
-    const odds: number[] = [];
-    const startOdd = start % 2 !== 0 ? start : start + 1;
-    
-    for (let i = startOdd; i <= end; i += 2) {
-      odds.push(i);
-    }
-    return odds;
+    return result.chunks[chunkIndex];
   }
   
-  private generateNumbers(start: number, end: number): number[] {
-    const intervalSize = end - start + 1;
-    if (intervalSize <= 1000) {
-      const numbers: number[] = [];
-      for (let i = start; i <= end; i++) {
-        numbers.push(i);
-      }
-      return numbers;
-    }
-    
-    return [];
+  clearJobResult(jobId: string): void {
+    this.jobResults.delete(jobId);
+  }
+  
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

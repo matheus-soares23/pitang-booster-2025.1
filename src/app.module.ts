@@ -7,6 +7,7 @@ import { calculatorService } from './calculator/calculator.service';
 import { bubbleSortController } from './bubbleSorter/bubbleSort.controller';
 import { bubbleSortService } from './bubbleSorter/bubbleSort.service';
 import { returnSystemProcessor } from './returnSystem/return_system.processor';
+import { ReturnSystemUtils } from './returnSystem/return_system.utils';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { returnSystemProcessor } from './returnSystem/return_system.processor';
     }),
   ],
   controllers: [returnSystemController, calculatorController, bubbleSortController],
-  providers: [returnSystemService, calculatorService, bubbleSortService, returnSystemProcessor],
+  providers: [returnSystemService, calculatorService, bubbleSortService, returnSystemProcessor, ReturnSystemUtils],
 })
 export class AppModule {}
