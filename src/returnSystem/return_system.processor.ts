@@ -54,7 +54,6 @@ export class returnSystemProcessor {
         };
       }
       
-      // Para intervalos grandes - processar em chunks
       await this.processLargeIntervalInChunks(start, end, operation, chunkSize, job, streamingResult);
       
       streamingResult.status = 'completed';

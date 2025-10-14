@@ -58,32 +58,33 @@ export class ReturnSystemUtils {
     }
   }
   
-  processChunk(start: number, end: number, operation: string): number[] {
+  processChunk(start: number, end: number, operation: string): any {
     switch (operation) {
       case "pair-numbers":
         return this.getPairNumbersInRange(start, end);
       case "odd-numbers":
         return this.getOddNumbersInRange(start, end);
       case "sum":
+        return this.calculateSum(start, end);
       case "average":
-        return [];
+        return this.calculateAverage(start, end);
       default:
         return this.getPairNumbersInRange(start, end);
     }
   }
   
   calculateOptimalChunkSize(intervalSize: number, requestedChunkSize?: number): number {
-    const DEFAULT_CHUNK_SIZE = 100000;
+    const DEFAULT_CHUNK_SIZE = 1000;
     const MIN_CHUNK_SIZE = 1000;
-    const MAX_CHUNK_SIZE = 1000000;
+    const MAX_CHUNK_SIZE = 1000;
     
     if (requestedChunkSize) {
       return Math.max(MIN_CHUNK_SIZE, Math.min(requestedChunkSize, MAX_CHUNK_SIZE));
     }
     
     if (intervalSize > 100_000_000) return MAX_CHUNK_SIZE;
-    if (intervalSize > 10_000_000) return 500000;
-    if (intervalSize > 1_000_000) return 250000;
+    if (intervalSize > 10_000_000) return 1000;
+    if (intervalSize > 1_000_000) return 1000;
     return DEFAULT_CHUNK_SIZE;
   }
   

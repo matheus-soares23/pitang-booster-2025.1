@@ -21,6 +21,11 @@ export class returnSystemController {
     return this.returnSystemService.getStreamingResult(jobId);
   }
 
+  @Get("result/:jobId")
+  async getJobResult(@Param("jobId") jobId: string) {
+    return this.returnSystemService.getJobResult(jobId);
+  }
+
   @Delete("streaming/:jobId")
   async clearJobResult(@Param("jobId") jobId: string) {
     await this.returnSystemService.clearJobResult(jobId);

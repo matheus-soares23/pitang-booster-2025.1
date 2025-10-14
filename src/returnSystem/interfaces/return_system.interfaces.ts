@@ -21,7 +21,7 @@ export interface ChunkResult {
   chunkIndex: number;
   start: number;
   end: number;
-  data: number[];
+  data: any;
   timestamp: Date;
 }
 
