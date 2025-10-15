@@ -12,7 +12,9 @@
     "start:prod": "node dist/main",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "commit": "cz",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -37,7 +39,17 @@
     "typescript": "^5.9.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@nestjs/cli": "^11.0.10",
-    "@types/express": "^5.0.3"
+    "@types/express": "^5.0.3",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }
