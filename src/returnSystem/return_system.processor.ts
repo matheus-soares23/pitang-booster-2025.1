@@ -3,6 +3,7 @@ import { Job } from 'bull';
 import { CalculationJobData, CalculationResult, ChunkResult, StreamingResult } from './interfaces/return_system.interfaces';
 import { ReturnSystemUtils } from './return_system.utils';
 
+// comentario para gerar conflito 2
 @Processor('return-system-queue')
 export class returnSystemProcessor {
   private readonly MAX_MEMORY_SAFE_SIZE = 1000000;
