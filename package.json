@@ -1,6 +1,6 @@
 {
   "name": "pitang-booster-2025.1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "repositório para metas estabelecidas no pitang booster",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "commit": "cz",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:patch": "standard-version --release-as patch",
+    "release:first": "standard-version --first-release"
   },
   "repository": {
     "type": "git",
@@ -45,7 +50,8 @@
     "@types/express": "^5.0.3",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "standard-version": "^9.5.0"
   },
   "config": {
     "commitizen": {
